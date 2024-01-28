@@ -6,7 +6,8 @@ async def main():
     tfc.get_raw_content()
     tfc.get_parsed_json()
     tfc.get_sub_links()
-    print(tfc.sub_links)
+    tfc.get_result()
+    tfc.save("result.json")
 
 if __name__ == "__main__":
     asyncio.run(main())

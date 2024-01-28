@@ -1,7 +1,9 @@
 import json
 import requests
+from bs4 import BeautifulSoup
 from src.handler import ErrorHanlder
 import re
+from src.utils import get_content_until
 
 class GenericWeb:
     def __init__(self, base_url: str, web_name: str):
@@ -37,6 +39,7 @@ class TaiwanFactCheck(GenericWeb):
         super().__init__(base_url, web_name)
 
         self.sub_links = []
+        self.result = []
     
     def get_raw_content(self) -> str:
         self._raw_content = super()._get_raw_content()
@@ -67,3 +70,27 @@ class TaiwanFactCheck(GenericWeb):
             except:
                 pass
         return self.sub_links
+
+    def get_page_content(self, link):
+        re = self._session.get(link)
+        
+        if re.status_code > 400:
+            return None
+        
+        soup = BeautifulSoup(re.content.decode("utf-8"), "html.parser")
+        titles = soup.find_all("h2")
+        head_tag = list(filter(lambda h2: h2.text == "背景", titles))[0]
+        content = get_content_until("h2", head_tag, include_head=False)
+        return content
+    
+    def get_result(self):
+        for link in self.sub_links:
+            content = self.get_page_content(link)
+            if content is None:
+                continue
+            self.result.append(content)
+        return self.result
+        
+    def save(self, path):
+        with open(path, "w", encoding="utf-8") as wf:
+            json.dump(self.result, wf, ensure_ascii=False, indent=4)
