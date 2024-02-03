@@ -72,10 +72,14 @@ class TaiwanFactCheck(GenericWeb):
             content = self.get_page_content(link)
             if content is None:
                 continue
+            content = content.replace("\n", "")
             self.result.append(content)
         return self.result
 
     def save(self, path):
-        to_save = [[hashlib.md5(x.encode("utf-8")).hexdigest(), x] for x in self.result]
+        to_save = [
+            {"id": hashlib.md5(x.encode("utf-8")).hexdigest(), "content": x, "label": 1}
+            for x in self.result
+        ]
         with open(path, "w", encoding="utf-8") as wf:
             json.dump(to_save, wf, ensure_ascii=False, indent=4)
