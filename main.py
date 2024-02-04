@@ -1,6 +1,6 @@
 import asyncio
 import requests
-from src.websites import TaiwanFactCheck
+from src.websites import TaiwanFactCheck, HumanBank104
 
 
 SERVER_IP = "localhost"
@@ -16,10 +16,11 @@ def post_result(data):
 
 async def main():
     tfc = TaiwanFactCheck()
-    tfc.get_sub_links()
-    results = tfc.get_result()
-    print(len(results))
-    tfc.save("result.json")
+    tfc.start_and_save(label=1)
+
+    hb104 = HumanBank104()
+    hb104.debug = False
+    hb104.start_and_save()
 
 
 if __name__ == "__main__":
