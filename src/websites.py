@@ -30,6 +30,9 @@ class GenericWeb:
     def get_result(self) -> List[str]:
         pass
 
+    def get_save_path(self) -> str:
+        return self._save_path
+
     def get_progress(self) -> float:
         return self._progress
 
@@ -40,7 +43,7 @@ class GenericWeb:
         stdout.flush()
 
     def save(self, path: str | None = None, label: int = 3) -> None:
-        save_path = self._save_path if path is None else path
+        self._save_path = self._save_path if path is None else path
         to_save = [
             {
                 "id": hashlib.md5(x.encode("utf-8")).hexdigest(),
@@ -49,7 +52,7 @@ class GenericWeb:
             }
             for x in self._result
         ]
-        with open(save_path, "w", encoding="utf-8") as wf:
+        with open(self._save_path, "w", encoding="utf-8") as wf:
             json.dump(to_save, wf, ensure_ascii=False, indent=4)
 
     def start_and_save(self, path: str | None = None, label: int = 3) -> None:
@@ -61,7 +64,7 @@ class HumanBank104(GenericWeb):
     def __init__(self):
         base_url = "https://www.104.com.tw/jobs/search/?keyword=%E5%AF%A6%E7%BF%92"
         web_name = "104 人力銀行"
-        save_path = "humanbank104.json"
+        save_path = "results/humanbank104.json"
         super().__init__(base_url, web_name, save_path)
         self._origin_url = self._base_url
         self._min_page = 0
@@ -106,7 +109,7 @@ class TaiwanFactCheck(GenericWeb):
     def __init__(self):
         base_url = ""
         web_name = "TaiwanFactCheck"
-        save_path = "taiwanfackcheck.json"
+        save_path = "results/taiwanfackcheck.json"
         super().__init__(base_url, web_name, save_path)
 
         self.sub_links = []

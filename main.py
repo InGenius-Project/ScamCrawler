@@ -3,8 +3,8 @@ import requests
 from src.websites import TaiwanFactCheck, HumanBank104
 
 
-SERVER_IP = "localhost"
-PORT = 8003
+SERVER_IP = "150.117.18.40"
+PORT = 8000
 API = f"{SERVER_IP}:{PORT}"
 
 
