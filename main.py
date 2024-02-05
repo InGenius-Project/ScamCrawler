@@ -5,9 +5,14 @@ import os
 import json
 from time import sleep
 from typing import List, Dict
+from dotenv import load_dotenv
 
-SERVER_IP = "150.117.18.40"
-PORT = 8000
+
+# load environment variables
+load_dotenv()
+
+SERVER_IP = os.getenv("SERVER_IP")
+PORT = os.getenv("PORT")
 API = f"http://{SERVER_IP}:{PORT}/"
 RESULT_PATH = "results/"
 PASS_CRAW = False

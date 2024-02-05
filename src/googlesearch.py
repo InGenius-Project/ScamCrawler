@@ -1,7 +1,11 @@
 from googleapiclient.discovery import build
+from dotenv import load_dotenv
+import os
 
-API_KEY = "AIzaSyAyJsfMSdhyLt6ocvDajFD71YCZ4Z_oXXU"
-CSE_KEY = "3548f561795e4481b"
+load_dotenv()
+
+API_KEY = os.getenv("GOOGLE_API_KEY")
+CSE_KEY = os.getenv("GOOGLE_CSE_KEY")
 
 
 class GoogleEngine:

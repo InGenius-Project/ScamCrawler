@@ -1,0 +1,24 @@
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+
+[tool.poetry]
+name = "scamcrawler"
+version = "0.1.0"
+description = ""
+authors = ["DACHXY <Danny10132024@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+bs4 = "^0.0.2"
+google-api-python-client = "^2.116.0"
+python-dotenv = "^1.0.1"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.1.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

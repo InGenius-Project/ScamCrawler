@@ -7,7 +7,7 @@ def get_content_until(tagname: str, head_tag, include_head=True, join_str="\n") 
 
     current = current.find_next_sibling()
 
-    while current != None and current.name != tagname:
+    while current is not None and current.name != tagname:
         tag_list.append(current)
         current = current.find_next_sibling()
 
