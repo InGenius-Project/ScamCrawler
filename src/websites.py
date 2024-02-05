@@ -44,6 +44,7 @@ class GenericWeb:
 
     def save(self, path: str | None = None, label: int = 3) -> None:
         self._save_path = self._save_path if path is None else path
+        self._result = list(set(self._result))
         to_save = [
             {
                 "id": hashlib.md5(x.encode("utf-8")).hexdigest(),
@@ -68,7 +69,7 @@ class HumanBank104(GenericWeb):
         super().__init__(base_url, web_name, save_path)
         self._origin_url = self._base_url
         self._min_page = 0
-        self._max_page = 50
+        self._max_page = 100
         self._current_page = 1
         self._sleep_time = 4
         self.debug = True
@@ -102,6 +103,7 @@ class HumanBank104(GenericWeb):
                 (self._current_page / self._max_page) * 100, 2)
             self.print_progress()
             sleep(self._sleep_time)
+        print()
         return self._result
 
 
