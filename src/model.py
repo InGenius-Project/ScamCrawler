@@ -10,6 +10,7 @@ class Job:
         other: str | None = None,
         jobName: str | None = None,
         jobType: str | None = None,
+        workHour: str | None = None,
     ) -> None:
         self.content = content
         self.title = title
@@ -20,6 +21,7 @@ class Job:
         self.other = other
         self.jobName = jobName
         self.jobType = jobType
+        self.workHour = workHour
 
     @staticmethod
     def get_TC_name(value: str) -> str:
@@ -33,6 +35,7 @@ class Job:
             "other": "其他資訊",
             "jobName": "職稱",
             "jobType": "工作性質",
+            "workHour": "工作時間",
         }
         result = translate_dict.get(value)
         if result is None:

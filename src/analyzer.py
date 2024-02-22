@@ -1,50 +1,83 @@
 from bs4 import BeautifulSoup, Tag
+import re
 from src.model import Job
 from typing import List
+import json
 
 
 class PageAnalyzer104:
     def __init__(self, page_source: str) -> None:
         self._soup: Tag = BeautifulSoup(page_source, "html.parser")
-        self._detail_soup = self._soup.find("div", class_="job-address")
+        self._raw_data = self._soup.find("script", {"type": "application/ld+json"})
 
-        self._json_data = self._soup.find("script", {"type": "application/ld+json"})
+        if self._raw_data is None:
+            raise Exception("Json format not found")
 
-        # TODO: Analyze the json data
-        print(self._json_data.text)
+        self._json_data = json.loads(self._raw_data.text)
+        description = self._json_data[2].get("description")
+        self._description = self._parse_description(description)
+
+    def _parse_description(self, description: str) -> str:
+        description = re.sub(r"&lt;br&gt;", "\n", description)
+        description = re.sub(r"&lt;.*?&gt;", "", description)
+        return description
 
     def get_area(self) -> str | None:
-        result = self._detail_soup.find_next("span")
-        if result is None:
-            return result
-        return self._combine_list_or_str(result.text)
+        area = self._json_data[2]["jobLocation"]["address"]["addressLocality"]
+        street = self._json_data[2]["jobLocation"]["address"]["streetAddress"]
+        return self._combine_list_or_str(area + street)
+
+    def get_title(self) -> str | None:
+        title = self._json_data[2].get("title")
+        return self._combine_list_or_str(title)
 
     def get_worktype(self) -> str | None:
-        result = self._detail_soup["worktype"]
-        return self._combine_list_or_str(result)
+        worktype = re.search(r"工作性質：(.*?)\n", self._description)
+        if worktype is None:
+            return None
+        worktype = worktype.group(1)
+        return worktype
 
     def get_content(self) -> str | None:
-        content = self._detail_soup["jobdescription"]
-        return self._combine_list_or_str(content)
+        return self._combine_list_or_str(self._description)
 
     def get_jobname(self) -> str | None:
-        u_tags = self._soup.find_all("u")
-        result = list(filter(lambda x: x.has_attr("data-v-fd30369a"), u_tags))
-        result = [x.text for x in result]
-        return self._combine_list_or_str(result)
+        jobname = re.search(r"職務類別：(.*?)\n", self._description)
+        if jobname is None:
+            return None
+        jobname = jobname.group(1)
+        return self._combine_list_or_str(jobname)
 
     def get_companyname(self) -> str | None:
-        result = self._soup.find("a", {"data-gtm-head": "公司名稱"})
-        if result is None:
-            return None
-        return self._combine_list_or_str(result.text)
+        companyName = self._json_data[2]["hiringOrganization"]["name"]
+        return self._combine_list_or_str(companyName)
 
     def get_industry(self) -> str | None:
-        pass
+        industry = self._json_data[2]["industry"]
+        return self._combine_list_or_str(industry)
 
     def get_salary(self) -> str | None:
-        result = self._detail_soup["salary"]
-        return self._combine_list_or_str(result)
+        unitText = self._json_data[2]["baseSalary"]["value"]["unitText"]
+        salary = self._json_data[2]["baseSalary"]["value"].get("value")
+        if salary is None:
+            return None
+        currency = self._json_data[2]["baseSalary"]["currency"]
+
+        if unitText == "MONTH":
+            if "月薪" in salary:
+                return self._combine_list_or_str(salary + f" ({currency})")
+            return self._combine_list_or_str(f"月薪{salary} ({currency})")
+
+        if unitText == "HOUR":
+            if "時薪" in salary:
+                return self._combine_list_or_str(salary + f" ({currency})")
+            return self._combine_list_or_str(f"時薪{salary} ({currency})")
+
+        return None
+
+    def get_workhour(self) -> str | None:
+        workhour = self._json_data[2]["workHours"]
+        return self._combine_list_or_str(workhour)
 
     def get_job(self) -> Job | None:
         content = self.get_content()
@@ -56,7 +89,8 @@ class PageAnalyzer104:
         companyName = self.get_companyname()
         industry = self.get_industry()
         salary = self.get_salary()
-        jobType = self.get_jobname()
+        jobType = self.get_worktype()
+        workHour = self.get_workhour()
 
         return Job(
             content=content,
@@ -66,6 +100,7 @@ class PageAnalyzer104:
             jobName=jobName,
             salary=salary,
             jobType=jobType,
+            workHour=workHour,
         )
 
     def _combine_list_or_str(self, data: str | List[str] | None) -> str | None:
@@ -77,5 +112,3 @@ class PageAnalyzer104:
 
         if isinstance(data, str):
             return data
-
-        return str(data)
