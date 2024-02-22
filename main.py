@@ -54,14 +54,14 @@ async def main():
         post_json_results()
         return
 
-    tfc = TaiwanFactCheck()
-    tfc.start_and_save(label=1)
+    # tfc = TaiwanFactCheck()
+    # tfc.start_and_save(label=1)
 
     hb104 = HumanBank104()
     hb104.debug = False
     hb104.start_and_save()
 
-    post_json_results()
+    # post_json_results()
 
 
 if __name__ == "__main__":

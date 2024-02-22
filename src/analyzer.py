@@ -1,48 +1,49 @@
-from bs4 import Tag
+from bs4 import BeautifulSoup, Tag
 from src.model import Job
 from typing import List
 
 
 class PageAnalyzer104:
-    def __init__(self, article_tag: Tag) -> None:
-        self._parent = article_tag
+    def __init__(self, page_source: str) -> None:
+        self._soup: Tag = BeautifulSoup(page_source, "html.parser")
+        self._detail_soup = self._soup.find("div", class_="job-address")
+
+        self._json_data = self._soup.find("script", {"type": "application/ld+json"})
+
+        # TODO: Analyze the json data
+        print(self._json_data.text)
 
     def get_area(self) -> str | None:
-        bblock_left = self._parent.select_one("div")
-        if bblock_left is None:
-            return None
+        result = self._detail_soup.find_next("span")
+        if result is None:
+            return result
+        return self._combine_list_or_str(result.text)
 
-        uls = bblock_left.select("ul")
-        if uls is None or len(uls) < 2:
-            return None
-
-        ul = uls[1]
-        area = ul.select_one("li")
-        if area is None:
-            return None
-        return area.get_text()
+    def get_worktype(self) -> str | None:
+        result = self._detail_soup["worktype"]
+        return self._combine_list_or_str(result)
 
     def get_content(self) -> str | None:
-        bblock_left = self._parent.select_one("div")
-        if bblock_left is None:
-            return None
-
-        p = bblock_left.select_one("p")
-        if p is None:
-            return None
-
-        return p.get_text()
+        content = self._detail_soup["jobdescription"]
+        return self._combine_list_or_str(content)
 
     def get_jobname(self) -> str | None:
-        result = self._parent.get("data-job-name")
+        u_tags = self._soup.find_all("u")
+        result = list(filter(lambda x: x.has_attr("data-v-fd30369a"), u_tags))
+        result = [x.text for x in result]
         return self._combine_list_or_str(result)
 
     def get_companyname(self) -> str | None:
-        result = self._parent.get("data-cust-name")
-        return self._combine_list_or_str(result)
+        result = self._soup.find("a", {"data-gtm-head": "公司名稱"})
+        if result is None:
+            return None
+        return self._combine_list_or_str(result.text)
 
     def get_industry(self) -> str | None:
-        result = self._parent.get("data-indcat-dec")
+        pass
+
+    def get_salary(self) -> str | None:
+        result = self._detail_soup["salary"]
         return self._combine_list_or_str(result)
 
     def get_job(self) -> Job | None:
@@ -54,6 +55,8 @@ class PageAnalyzer104:
         jobName = self.get_jobname()
         companyName = self.get_companyname()
         industry = self.get_industry()
+        salary = self.get_salary()
+        jobType = self.get_jobname()
 
         return Job(
             content=content,
@@ -61,6 +64,8 @@ class PageAnalyzer104:
             industry=industry,
             area=area,
             jobName=jobName,
+            salary=salary,
+            jobType=jobType,
         )
 
     def _combine_list_or_str(self, data: str | List[str] | None) -> str | None:

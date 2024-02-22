@@ -3,7 +3,7 @@ from sys import stdout
 import json
 import requests
 from typing import List
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup, SoupStrainer, Tag
 from src.googlesearch import GoogleEngine
 from src.utils import get_content_until
 import hashlib
@@ -67,43 +67,55 @@ class HumanBank104(GenericWeb):
         web_name = "104 人力銀行"
         save_path = "results/humanbank104.json"
         super().__init__(base_url, web_name, save_path)
+
+        # Use selenium
+        from src.utils import SeleniumDriver
+        self._selenium_driver = SeleniumDriver()
+
         self._origin_url = self._base_url
         self._min_page = 0
         self._max_page = 100
         self._current_page = 1
-        self._sleep_time = 4
+        self._sleep_time = 1
         self.debug = True
 
     def _get_raw_content(self) -> bytes:
         return super()._get_raw_content()
 
-    def _get_article_content(self, article_tag: Tag) -> str | None:
-        pga104 = PageAnalyzer104(article_tag)
+    def _get_page_content(self, page_source: str) -> str | None:
+        pga104 = PageAnalyzer104(page_source)
         job = pga104.get_job()
         if job is None:
             return None
         return job.combine()
 
+    def _get_sub_links(self) -> List[str]:
+        raw_content = self._get_raw_content()
+        soup = BeautifulSoup(raw_content, "html.parser", parse_only=SoupStrainer("a"))
+        results = list(filter(lambda y: "//www.104.com.tw/job/" in y ,[ "https:" + x["href"] for x in soup]))
+        return results
+
     def get_result(self) -> List[str]:
         while self._current_page < self._max_page:
             self._base_url = self._origin_url + f"&page={self._current_page}"
-            raw_content = self._get_raw_content()
-            soup = BeautifulSoup(raw_content, "html.parser")
-
-            articles = soup.select("article")
-            for article in articles:
-                content = self._get_article_content(article)
+            links = self._get_sub_links() 
+            for link in links:
+                self._selenium_driver.get(link)
+                page_source = self._selenium_driver.get_content()
+                if page_source is None:
+                    continue
+                content = self._get_page_content(page_source)
                 if content is None:
                     continue
                 self._result.append(content)
             self._current_page += 1
             if self.debug:
                 break
-            self._progress = round(
-                (self._current_page / self._max_page) * 100, 2)
+            self._progress = round((self._current_page / self._max_page) * 100, 2)
             self.print_progress()
             sleep(self._sleep_time)
         print()
+        self._selenium_driver.quit()
         return self._result
 
 
