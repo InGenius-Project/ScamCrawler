@@ -39,7 +39,7 @@ class GenericWeb:
     def print_progress(self) -> None:
         percent = self._progress
         format_percent = "{:5}".format(percent)
-        stdout.write(f"\r{self._web_name}: {format_percent}%")
+        stdout.write(f"\r{self._web_name}: {format_percent}% [DATA: {len(self._result)}]")
         stdout.flush()
 
     def save(self, path: str | None = None, label: int = 3) -> None:
@@ -108,11 +108,11 @@ class HumanBank104(GenericWeb):
                 if content is None:
                     continue
                 self._result.append(content)
+                self._progress = round((self._current_page / self._max_page) * 100, 2)
+                self.print_progress()
             self._current_page += 1
             if self.debug:
                 break
-            self._progress = round((self._current_page / self._max_page) * 100, 2)
-            self.print_progress()
             sleep(self._sleep_time)
         print()
         self._selenium_driver.quit()

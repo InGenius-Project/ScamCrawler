@@ -57,7 +57,7 @@ class PageAnalyzer104:
         return self._combine_list_or_str(industry)
 
     def get_salary(self) -> str | None:
-        unitText = self._json_data[2]["baseSalary"]["value"]["unitText"]
+        unitText = self._json_data[2]["baseSalary"]["value"].get("unitText")
         salary = self._json_data[2]["baseSalary"]["value"].get("value")
         if salary is None:
             return None
@@ -73,7 +73,7 @@ class PageAnalyzer104:
                 return self._combine_list_or_str(salary + f" ({currency})")
             return self._combine_list_or_str(f"時薪{salary} ({currency})")
 
-        return None
+        return self._combine_list_or_str(f"{salary} ({currency})")
 
     def get_workhour(self) -> str | None:
         workhour = self._json_data[2]["workHours"]
